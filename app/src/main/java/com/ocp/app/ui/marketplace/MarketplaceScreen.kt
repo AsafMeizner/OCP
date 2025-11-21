@@ -13,21 +13,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import com.ocp.app.network.NetworkClient
+import com.ocp.app.network.PluginDto
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarketplaceScreen(
     onBack: () -> Unit
 ) {
-    // Mock Data
-    val plugins = remember {
-        listOf(
-            MarketplacePlugin("Retro VHS", "Analog tape effects", "Free"),
-            MarketplacePlugin("Cyberpunk LUT", "Neon city vibes", "$1.99"),
-            MarketplacePlugin("Face Smooth", "Beauty filter", "Free"),
-            MarketplacePlugin("Glitch Art", "Digital distortion", "$0.99"),
-            MarketplacePlugin("Cinematic Teal", "Blockbuster look", "Free"),
-            MarketplacePlugin("B&W Noir", "Classic film style", "Free")
-        )
+    var plugins by remember { mutableStateOf<List<PluginDto>>(emptyList()) }
+    
+    LaunchedEffect(Unit) {
+        try {
+            plugins = NetworkClient.api.getPlugins()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     Scaffold(
@@ -59,7 +60,7 @@ fun MarketplaceScreen(
 }
 
 @Composable
-fun PluginStoreCard(plugin: MarketplacePlugin) {
+fun PluginStoreCard(plugin: PluginDto) {
     Card(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -86,7 +87,7 @@ fun PluginStoreCard(plugin: MarketplacePlugin) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = plugin.price, style = MaterialTheme.typography.labelLarge)
+                Text(text = "$${plugin.price}", style = MaterialTheme.typography.labelLarge)
                 IconButton(onClick = { /* TODO: Download */ }) {
                     Icon(Icons.Default.Download, contentDescription = "Download")
                 }
@@ -94,5 +95,3 @@ fun PluginStoreCard(plugin: MarketplacePlugin) {
         }
     }
 }
-
-data class MarketplacePlugin(val name: String, val description: String, val price: String)

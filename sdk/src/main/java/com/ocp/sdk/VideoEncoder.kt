@@ -19,32 +19,6 @@ class VideoEncoder(
     private var muxer: MediaMuxer? = null
     private var trackIndex = -1
     private var muxerStarted = false
-    private val bufferInfo = MediaCodec.BufferInfo()
-    private var isRecording = false
-
-    fun start(): Surface {
-        if (isRecording) return inputSurface!!
-
-        try {
-            val format = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height)
-            format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
-            format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
-            format.setInteger(MediaFormat.KEY_FRAME_RATE, 30)
-            format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
-
-            encoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            encoder!!.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            inputSurface = encoder!!.createInputSurface()
-            encoder!!.start()
-
-            muxer = MediaMuxer(outputFile, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-            isRecording = true
-        } catch (e: IOException) {
-            e.printStackTrace()
-            throw RuntimeException("Failed to start encoder", e)
-        }
-
-        return inputSurface!!
     }
 
     fun drainEncoder(endOfStream: Boolean) {
