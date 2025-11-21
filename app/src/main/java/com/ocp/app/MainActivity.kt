@@ -42,24 +42,6 @@ class MainActivity : ComponentActivity() {
 
         if (!allPermissionsGranted()) {
             requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
-        }
-
-        setContent {
-            OCPTheme {
-                val navController = rememberNavController()
-                
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    NavHost(navController = navController, startDestination = "camera") {
-import com.ocp.app.ui.marketplace.MarketplaceScreen
-
-// ...
-
-                        composable("camera") {
-                            CameraScreen(
-                                captureController = captureController,
                                 onToggleRecording = { isRecording ->
                                     if (isRecording) {
                                         val file = File(getExternalFilesDir(null), "video_${System.currentTimeMillis()}.mp4")
