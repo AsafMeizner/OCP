@@ -1,6 +1,6 @@
 package com.ocp.sdk
 
-import com.ocp.sdk.plugins.PassthroughPlugin
+import com.ocp.sdk.plugins.BrightnessContrastPlugin
 
 class PluginLoader {
     
@@ -28,7 +28,11 @@ class PluginLoader {
         // In a real system, this would load from a dynamic library or APK.
         // Here we use a simple registry for the prototype.
         return when (pluginName) {
-            "Passthrough" -> PassthroughPlugin()
+            "Passthrough" -> com.ocp.sdk.plugins.BrightnessContrastPlugin() // Use BC as default for now, or create a real Passthrough
+            "BrightnessContrast" -> com.ocp.sdk.plugins.BrightnessContrastPlugin()
+            "Lut" -> com.ocp.sdk.plugins.LutPlugin()
+            "FaceMask" -> com.ocp.sdk.plugins.FaceMaskPlugin()
+            "Reverb" -> com.ocp.sdk.audio.plugins.ReverbPlugin()
             else -> {
                 println("PluginLoader: Unknown plugin $pluginName")
                 null
@@ -36,20 +40,12 @@ class PluginLoader {
         }
     }
 
-    fun instantiatePipeline(pipeline: Pipeline): List<Plugin> {
+    fun instantiatePipeline(pipeline: com.ocp.shared.PipelineDefinition): List<Plugin> {
         val plugins = mutableListOf<Plugin>()
-        // Assuming pipeline.stages.values.flatten() now yields PluginDefinition objects
-        // or that the pluginName can be used to look up the definition.
-        // For this change, we'll assume the `forEach` loop now iterates over `PluginDefinition` objects.
-        // If `pipeline.stages.values.flatten()` still yields `String` (pluginName),
-        // then `definition` would need to be looked up based on `pluginName`.
-        // Given the instruction, we'll adapt the loop to use `definition` directly.
-        pipeline.stages.values.flatten().forEach { definition -> // Assuming 'definition' is a PluginDefinition object
-            loadPlugin(definition.name)?.let { plugin -> // Load plugin using definition's name
-                plugin.init(definition.parameters) // Pass parameters from the definition
-                plugins.add(plugin) // Add to the list of instantiated plugins
-                // If the intent was to store in loadedPlugins map, it would be:
-                // loadedPlugins[definition.name] = plugin
+        pipeline.plugins.forEach { definition ->
+            loadPlugin(definition.type)?.let { plugin ->
+                plugin.init(definition.parameters)
+                plugins.add(plugin)
             }
         }
         return plugins

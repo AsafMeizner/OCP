@@ -1,13 +1,12 @@
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.compose")
+    id("org.jetbrains.compose") version "1.6.1"
 }
 
 kotlin {
     jvm {
         withJava()
     }
-    
     sourceSets {
         val jvmMain by getting {
             dependencies {

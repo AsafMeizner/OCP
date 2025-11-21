@@ -12,50 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-import com.ocp.app.network.NetworkClient
-import com.ocp.app.network.PluginDto
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MarketplaceScreen(
-    onBack: () -> Unit
-) {
-    var plugins by remember { mutableStateOf<List<PluginDto>>(emptyList()) }
-    
-    LaunchedEffect(Unit) {
-        try {
-            plugins = NetworkClient.api.getPlugins()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Plugin Marketplace") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            items(plugins) { plugin ->
-                PluginStoreCard(plugin)
-            }
-        }
     }
 }
 

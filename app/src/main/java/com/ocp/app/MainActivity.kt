@@ -40,20 +40,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         captureController = CaptureController(this)
 
-        if (!allPermissionsGranted()) {
-            requestPermissionLauncher.launch(REQUIRED_PERMISSIONS)
-                                onToggleRecording = { isRecording ->
-                                    if (isRecording) {
-                                        val file = File(getExternalFilesDir(null), "video_${System.currentTimeMillis()}.mp4")
-                                        captureController.startRecording(file.absolutePath)
-                                    } else {
-                                        captureController.stop()
-                                        captureController.start("0", "default")
-                                    }
-                                },
-                                onEditPipeline = {
-                                    navController.navigate("editor")
-                                },
                                 onOpenMarketplace = {
                                     navController.navigate("marketplace")
                                 }
@@ -63,27 +49,6 @@ class MainActivity : ComponentActivity() {
                             PipelineEditorScreen(
                                 captureController = captureController,
                                 onBack = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
-                        composable("marketplace") {
-                            MarketplaceScreen(
-                                onBack = {
-                                    navController.popBackStack()
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
-        ContextCompat.checkSelfPermission(baseContext, it) == PackageManager.PERMISSION_GRANTED
-    }
-
     companion object {
         private val REQUIRED_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,

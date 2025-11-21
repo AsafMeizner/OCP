@@ -18,9 +18,16 @@ import com.ocp.shared.PipelineDefinition
 @Composable
 fun ProfileScreen(onBack: () -> Unit) {
     var pipelines by remember { mutableStateOf<List<PipelineDefinition>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
-        pipelines = PipelineRepository.getMyPipelines()
+        try {
+            pipelines = PipelineRepository.getMyPipelines()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            isLoading = false
+        }
     }
 
     Scaffold(
@@ -35,26 +42,32 @@ fun ProfileScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding).padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(64.dp))
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text("User", style = MaterialTheme.typography.headlineMedium)
-                    Text("user@example.com", style = MaterialTheme.typography.bodyMedium)
-                }
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            Text("My Pipelines", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(pipelines) { pipeline ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(pipeline.name, style = MaterialTheme.typography.titleMedium)
-                            Text("ID: ${pipeline.id}", style = MaterialTheme.typography.bodySmall)
+        } else {
+            Column(modifier = Modifier.padding(padding).padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(64.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text("User", style = MaterialTheme.typography.headlineMedium)
+                        Text("user@example.com", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                Text("My Pipelines", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(pipelines) { pipeline ->
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(pipeline.name, style = MaterialTheme.typography.titleMedium)
+                                Text("ID: ${pipeline.id}", style = MaterialTheme.typography.bodySmall)
+                            }
                         }
                     }
                 }
