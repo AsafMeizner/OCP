@@ -1,17 +1,33 @@
-                engine.setPreviewSurface(holder.surface)
-            }
+package com.ocp.sdk
 
-            override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-                // Handle resize
-            }
+import android.content.Context
+import android.view.SurfaceHolder
+import com.ocp.sdk.audio.AudioEngine
+import com.ocp.sdk.audio.AudioPlugin
 
-            override fun surfaceDestroyed(holder: SurfaceHolder) {
-                engine.setPreviewSurface(null!!) // Simplified for now
-            }
-        })
+class CaptureController(context: Context) {
+
+    private val cameraInput = CameraInput(context)
+    private val pipelineEngine = PipelineEngine()
+    private val audioEngine = AudioEngine()
+    private val pluginLoader = PluginLoader()
+    
+    // Keep track of encoder to wire audio
+    private var currentEncoder: VideoEncoder? = null
+
+    init {
+        // Start audio engine immediately for monitoring/processing
+        audioEngine.start()
     }
 
-                engine.setPreviewSurface(holder.surface)
+    fun start(cameraId: String, pipelineId: String) {
+        cameraInput.start(cameraId, pipelineEngine.surfaceTexture)
+    }
+
+    fun setPreviewSurface(holder: SurfaceHolder) {
+        holder.addCallback(object : SurfaceHolder.Callback {
+            override fun surfaceCreated(holder: SurfaceHolder) {
+                pipelineEngine.setPreviewSurface(holder.surface)
             }
 
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
@@ -19,15 +35,30 @@
             }
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                engine.setPreviewSurface(null!!) // Simplified for now
+                pipelineEngine.setPreviewSurface(null)
             }
         })
     }
 
     fun startRecording(outputPath: String) {
         val encoder = VideoEncoder(1920, 1080, 10000000, outputPath)
-        engine.startRecording(encoder)
+        currentEncoder = encoder
+        
+        // Wire Audio
+        audioEngine.setAudioSink(object : AudioEngine.AudioSink {
+            override fun onAudioData(data: ByteArray, size: Int, timestampNs: Long) {
+                currentEncoder?.queueAudio(data, size, timestampNs)
+            }
+        })
+        
+        pipelineEngine.startRecording(encoder)
         println("Recording started to: $outputPath")
+    }
+    
+    fun stopRecording() {
+        audioEngine.setAudioSink(null)
+        pipelineEngine.stopRecording()
+        currentEncoder = null
     }
 
     fun setPipeline(pipeline: com.ocp.shared.PipelineDefinition) {
@@ -35,16 +66,14 @@
         pipelineEngine.setPlugins(plugins)
         
         // Audio Plugins
-        // For now, we just check if Reverb is in the list for the AudioEngine
-        // In a real engine, we'd have separate audio/video chains in the definition
-        val audioPlugins = plugins.filterIsInstance<com.ocp.sdk.audio.AudioPlugin>()
+        val audioPlugins = plugins.filterIsInstance<AudioPlugin>()
         audioEngine.setPlugins(audioPlugins)
     }
 
     fun stop() {
+        stopRecording()
         cameraInput.stop()
         audioEngine.stop()
-        engine.stopRecording()
-        engine.stop()
+        pipelineEngine.stop()
     }
 }

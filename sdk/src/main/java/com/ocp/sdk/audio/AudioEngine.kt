@@ -18,6 +18,16 @@ class AudioEngine {
     
     private val plugins = mutableListOf<AudioPlugin>()
 
+    interface AudioSink {
+        fun onAudioData(data: ByteArray, size: Int, timestampNs: Long)
+    }
+
+    private var audioSink: AudioSink? = null
+
+    fun setAudioSink(sink: AudioSink?) {
+        this.audioSink = sink
+    }
+
     @SuppressLint("MissingPermission")
     fun start() {
         if (isRunning.get()) return
@@ -40,6 +50,10 @@ class AudioEngine {
 
         recordingThread = Thread {
             val buffer = ShortArray(bufferSize)
+            // We need a ByteArray for the encoder/sink usually, but plugins process ShortArray.
+            // Let's convert for now or assume plugins handle ShortArray and we convert to Byte for sink.
+            val byteBuffer = ByteArray(bufferSize * 2)
+            
             while (isRunning.get()) {
                 val readResult = audioRecord?.read(buffer, 0, bufferSize) ?: 0
                 if (readResult > 0) {
@@ -52,7 +66,10 @@ class AudioEngine {
                         }
                     }
 
-                    // TODO: Pass processedData to Encoder or AudioTrack
+                    // Convert ShortArray to ByteArray for Sink
+                    java.nio.ByteBuffer.wrap(byteBuffer).order(java.nio.ByteOrder.LITTLE_ENDIAN).asShortBuffer().put(processedData, 0, readResult)
+                    
+                    audioSink?.onAudioData(byteBuffer, readResult * 2, System.nanoTime())
                 }
             }
         }
@@ -81,6 +98,13 @@ class AudioEngine {
     fun clearPlugins() {
         synchronized(plugins) {
             plugins.clear()
+        }
+    }
+
+    fun setPlugins(newPlugins: List<AudioPlugin>) {
+        synchronized(plugins) {
+            plugins.clear()
+            plugins.addAll(newPlugins)
         }
     }
 }

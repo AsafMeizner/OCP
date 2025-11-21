@@ -81,7 +81,7 @@ class VideoEncoder(
 
     // Audio State
     private var audioEncoder: MediaCodec? = null
-    private var audioRecord: android.media.AudioRecord? = null
+
     private var audioThread: Thread? = null
     private val audioBufferInfo = MediaCodec.BufferInfo()
     private var audioTrackIndex = -1
@@ -118,52 +118,46 @@ class VideoEncoder(
     }
 
     private fun startAudio() {
-        audioThread = Thread {
-            try {
-                val sampleRate = 44100
-                val channelConfig = android.media.AudioFormat.CHANNEL_IN_MONO
-                val audioFormat = android.media.AudioFormat.ENCODING_PCM_16BIT
-                val minBufferSize = android.media.AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
-                val bufferSize = minBufferSize * 4
-                
-                audioRecord = android.media.AudioRecord(
-                    android.media.MediaRecorder.AudioSource.MIC,
-                    sampleRate,
-                    channelConfig,
-                    audioFormat,
-                    bufferSize
-                )
-                
-                val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, 1)
-                format.setInteger(MediaFormat.KEY_BIT_RATE, 64000)
-                format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
-                
-                audioEncoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
-                audioEncoder!!.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-                audioEncoder!!.start()
-                
-                audioRecord?.startRecording()
-                
-                val buffer = ByteArray(bufferSize)
+        try {
+            val sampleRate = 44100
+            val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, 1)
+            format.setInteger(MediaFormat.KEY_BIT_RATE, 64000)
+            format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
+            
+            audioEncoder = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
+            audioEncoder!!.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            audioEncoder!!.start()
+            
+            audioThread = Thread {
                 while (isRecording) {
-                    val read = audioRecord?.read(buffer, 0, bufferSize) ?: 0
-                    if (read > 0) {
-                        val inputBufferIndex = audioEncoder!!.dequeueInputBuffer(10000)
-                        if (inputBufferIndex >= 0) {
-                            val inputBuffer = audioEncoder!!.getInputBuffer(inputBufferIndex)
-                            inputBuffer?.clear()
-                            inputBuffer?.put(buffer, 0, read)
-                            audioEncoder!!.queueInputBuffer(inputBufferIndex, 0, read, System.nanoTime() / 1000, 0)
-                        }
-                        
-                        drainAudio()
+                    drainAudio()
+                    try {
+                        Thread.sleep(10)
+                    } catch (e: InterruptedException) {
+                        break
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
+            audioThread?.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        audioThread?.start()
+    }
+
+    fun queueAudio(buffer: ByteArray, size: Int, timestampNs: Long) {
+        if (!isRecording || audioEncoder == null) return
+        
+        try {
+            val inputBufferIndex = audioEncoder!!.dequeueInputBuffer(0) // Don't block here
+            if (inputBufferIndex >= 0) {
+                val inputBuffer = audioEncoder!!.getInputBuffer(inputBufferIndex)
+                inputBuffer?.clear()
+                inputBuffer?.put(buffer, 0, size)
+                audioEncoder!!.queueInputBuffer(inputBufferIndex, 0, size, timestampNs / 1000, 0)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     private fun drainAudio() {
@@ -257,9 +251,7 @@ class VideoEncoder(
             audioEncoder?.release()
             audioEncoder = null
             
-            audioRecord?.stop()
-            audioRecord?.release()
-            audioRecord = null
+
             
             inputSurface?.release()
             inputSurface = null
