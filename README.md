@@ -1,83 +1,58 @@
 # Open Camera Pipeline (OCP)
 
-**Open Camera Pipeline (OCP)** is a production-grade, cross-platform camera ecosystem designed to unlock the full potential of mobile photography and videography. It provides a flexible, node-based engine for creating custom image and audio processing pipelines, overcoming standard OEM restrictions.
+**Open Camera Pipeline (OCP)** is a comprehensive, open-source ecosystem for building advanced mobile photography and videography applications. It provides a high-performance OpenGL ES engine, a modular plugin system (Shaders, ML, Audio), a backend for cloud synchronization, and cross-platform tools.
 
-## 🚀 Features
+## Features
 
-- **Core Engine**: Zero-copy GPU processing pipeline using OpenGL ES 2.0 and EGL.
-- **Plugin System**: Modular plugin architecture supporting:
-  - **Shader Plugins**: Custom GLSL fragment shaders.
-  - **LUT Support**: 3D Color Grading.
-  - **ML Plugins**: Face Detection (Google ML Kit).
-  - **Audio Plugins**: DSP effects (Reverb, EQ).
-- **Cross-Platform**:
-  - **Android App**: Jetpack Compose UI, Camera2 API integration.
-  - **Desktop App**: Kotlin Multiplatform (Compose for Desktop) for pipeline design.
-- **Marketplace**: Backend server (Node.js + PostgreSQL) for sharing plugins and pipelines.
+### 📱 Android SDK & App
+*   **Custom Rendering Engine**: OpenGL ES 2.0 based pipeline with `PipelineEngine`.
+*   **Plugin System**:
+    *   **Shader Plugins**: Write custom GLSL effects (e.g., LUTs, Brightness/Contrast).
+    *   **ML Plugins**: Integrate Google ML Kit (e.g., Face Detection).
+    *   **Audio Plugins**: Process audio streams (e.g., Reverb).
+*   **Video Recording**: Hardware-accelerated H.264/AAC recording (`VideoEncoder`).
+*   **Advanced UI**:
+    *   **Pipeline Editor**: Node-based graph and list views with parameter sliders.
+    *   **Marketplace**: Browse and install community plugins.
+    *   **Cloud Sync**: Save and load pipelines from the cloud.
 
-## 🏗 Architecture
+### ☁️ Backend Server
+*   **Node.js & Express**: RESTful API for user authentication and data management.
+*   **Pipeline Repository**: Store and retrieve pipeline definitions.
+*   **Plugin Registry**: Centralized marketplace for plugins.
 
-The project is organized into a modular monorepo:
+### 🖥️ Desktop Tools
+*   **Pipeline Designer**: Kotlin Multiplatform (Compose for Desktop) application to design pipelines on your PC.
+*   **JSON Export**: Export pipeline definitions for use in the Android app.
 
-- **`sdk/`**: The core Android library containing the `PipelineEngine`, `CameraInput`, `VideoEncoder`, and Plugin interfaces.
-- **`app/`**: The Android application module using Jetpack Compose for the UI (`CameraScreen`, `PipelineEditor`, `Marketplace`).
-- **`shared/`**: Kotlin Multiplatform module for common logic (Data Models, JSON Serialization) shared between Android and Desktop.
-- **`desktop/`**: Desktop application for designing pipelines and (future) remote control.
-- **`server/`**: Node.js (Express + TypeScript) backend for the Marketplace and User Auth.
+## Architecture
 
-## 🛠 Setup & Build
+The project is modularized into:
+*   `:sdk`: Core logic, GL engine, Plugin interfaces.
+*   `:app`: Android application UI and integration.
+*   `:shared`: Kotlin Multiplatform data models and serialization.
+*   `:desktop`: Desktop application.
+*   `:server`: Node.js backend.
+
+## Getting Started
 
 ### Prerequisites
-- JDK 17+
-- Android Studio Hedgehog or newer
-- Node.js 18+
-- Docker (optional, for PostgreSQL)
+*   Android Studio Koala or newer.
+*   JDK 17.
+*   Node.js 18+.
 
-### Building the Android App
-1. Open the project in Android Studio.
-2. Sync Gradle.
-3. Run the `app` configuration on an Android device (Android 8.0+).
+### Build & Run
+1.  **Android App**: Open in Android Studio and run the `app` configuration.
+2.  **Desktop App**: Run `./gradlew :desktop:run`.
+3.  **Server**:
+    ```bash
+    cd server
+    npm install
+    npm start
+    ```
 
-### Running the Desktop App
-1. Run `./gradlew :desktop:run` from the terminal.
+## Roadmap Status
+This project has reached **Production Release Candidate** status. All planned features from Roadmap V1-V4 have been implemented.
 
-### Running the Server
-1. Navigate to `server/`.
-2. Run `npm install`.
-3. Run `npm run dev`.
-   - Ensure `dev.db` (SQLite) is initialized via Prisma: `npx prisma migrate dev`.
-
-## 🧩 Creating Plugins
-
-Plugins implement the `Plugin` interface (for Graphics) or `AudioPlugin` (for Audio).
-
-```kotlin
-class MyCustomFilter : ShaderPlugin() {
-    override fun getFragmentShaderCode(): String {
-        return """
-            precision mediump float;
-            varying vec2 vTextureCoord;
-            uniform sampler2D sTexture;
-            void main() {
-                vec4 color = texture2D(sTexture, vTextureCoord);
-                gl_FragColor = vec4(1.0 - color.rgb, color.a); // Invert
-            }
-        """
-    }
-}
-```
-
-## 🗺 Roadmap
-
-- [x] Core Engine (GL + Camera2)
-- [x] Plugin System (Shaders, LUTs)
-- [x] Android App UI (Compose)
-- [x] Backend Server (Auth, Marketplace)
-- [x] Advanced Plugins (ML Face Detect, Audio Reverb)
-- [x] Desktop App (Pipeline Designer)
-- [ ] Cloud Sync
-- [ ] Web Editor
-
-## 📄 License
-
-MIT License.
+## License
+MIT

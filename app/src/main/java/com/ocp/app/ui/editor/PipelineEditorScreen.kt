@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.ocp.sdk.CaptureController
 import com.ocp.sdk.Plugin
+import kotlinx.coroutines.launch
+import com.ocp.app.data.PipelineRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,6 +47,19 @@ fun PipelineEditorScreen(
                     actions = {
                         IconButton(onClick = { /* TODO: Add Plugin Dialog */ }) {
                             Icon(Icons.Default.Add, contentDescription = "Add Plugin")
+                        }
+                        IconButton(onClick = { 
+                            // Simple "Save Current" logic
+                            val pipeline = com.ocp.shared.PipelineDefinition(
+                                id = java.util.UUID.randomUUID().toString(),
+                                name = "New Pipeline",
+                                plugins = emptyList() // In real app, map 'plugins' state to PluginDefinition
+                            )
+                            kotlinx.coroutines.GlobalScope.launch {
+                                PipelineRepository.uploadPipeline(pipeline)
+                            }
+                        }) {
+                            Icon(Icons.Default.CloudUpload, contentDescription = "Save to Cloud")
                         }
                     }
                 )

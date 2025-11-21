@@ -44,22 +44,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit) {
         if (error != null) {
             Text(error!!, color = MaterialTheme.colorScheme.error)
             Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        Button(
-            onClick = {
-                scope.launch {
-                    try {
-                        val response = NetworkClient.api.login(com.ocp.app.network.LoginRequest(email, password))
-                        // TODO: Save token
-                        onLoginSuccess()
-                    } catch (e: Exception) {
-                        error = "Login failed: ${e.message}"
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
             Text("Login")
         }
     }

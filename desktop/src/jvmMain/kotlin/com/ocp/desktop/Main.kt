@@ -81,15 +81,55 @@ fun PipelineDesigner() {
 
             Spacer(modifier = Modifier.height(8.dp))
             
-            Button(onClick = {
-                val pipeline = PipelineDefinition(
-                    id = java.util.UUID.randomUUID().toString(),
-                    name = pipelineName,
-                    plugins = plugins.toList()
-                )
-                jsonOutput = PipelineSerializer.toJson(pipeline)
-            }) {
-                Text("Generate JSON")
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row {
+                Button(onClick = {
+                    val pipeline = PipelineDefinition(
+                        id = java.util.UUID.randomUUID().toString(),
+                        name = pipelineName,
+                        plugins = plugins.toList()
+                    )
+                    jsonOutput = PipelineSerializer.toJson(pipeline)
+                }) {
+                    Text("Generate JSON")
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+                
+                Button(onClick = {
+                    val fileDialog = java.awt.FileDialog(null as java.awt.Frame?, "Save Pipeline", java.awt.FileDialog.SAVE)
+                    fileDialog.file = "$pipelineName.json"
+                    fileDialog.isVisible = true
+                    if (fileDialog.file != null) {
+                        val file = java.io.File(fileDialog.directory, fileDialog.file)
+                        file.writeText(jsonOutput)
+                    }
+                }) {
+                    Text("Save to File")
+                }
+                
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Button(onClick = {
+                    val fileDialog = java.awt.FileDialog(null as java.awt.Frame?, "Open Pipeline", java.awt.FileDialog.LOAD)
+                    fileDialog.isVisible = true
+                    if (fileDialog.file != null) {
+                        val file = java.io.File(fileDialog.directory, fileDialog.file)
+                        val json = file.readText()
+                        try {
+                            val pipeline = PipelineSerializer.fromJson(json)
+                            pipelineName = pipeline.name
+                            plugins.clear()
+                            plugins.addAll(pipeline.plugins)
+                            jsonOutput = json
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }) {
+                    Text("Open File")
+                }
             }
             
             Spacer(modifier = Modifier.height(8.dp))

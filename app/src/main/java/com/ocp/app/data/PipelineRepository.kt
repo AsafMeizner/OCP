@@ -7,22 +7,28 @@ import com.ocp.shared.PipelineSerializer
 
 object PipelineRepository {
     suspend fun uploadPipeline(pipeline: PipelineDefinition) {
-        // TODO: Add API endpoint for pipeline upload
-        // NetworkClient.api.uploadPipeline(pipeline)
-        println("Uploading pipeline: ${pipeline.name}")
+        try {
+            NetworkClient.api.uploadPipeline(pipeline)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     suspend fun downloadPipeline(id: String): PipelineDefinition? {
-        // TODO: Add API endpoint for pipeline download
-        // return NetworkClient.api.getPipeline(id)
-        return null
+        return try {
+            NetworkClient.api.getPipeline(id)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
     
     suspend fun getMyPipelines(): List<PipelineDefinition> {
-        // Mock data
-        return listOf(
-            PipelineDefinition("1", "My Cool Filter", emptyList()),
-            PipelineDefinition("2", "Portrait Mode", emptyList())
-        )
+        return try {
+            NetworkClient.api.getMyPipelines()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
     }
 }
