@@ -74,66 +74,6 @@ class PipelineEngine {
 
             // ... (Surface handling same as before) ...
             if (surface != null && windowSurface == null) {
-                windowSurface = WindowSurface(eglCore!!, surface!!, false)
-            } else if (surface == null && windowSurface != null) {
-                windowSurface?.release()
-                windowSurface = null
-            }
-            
-            if (recording && encoder != null && encoderSurface == null) {
-                val inputSurf = encoder!!.start()
-                encoderSurface = WindowSurface(eglCore!!, inputSurf, false)
-            } else if (!recording && encoderSurface != null) {
-                encoderSurface?.release()
-                encoderSurface = null
-                videoEncoder?.stop()
-                videoEncoder = null
-            }
-
-            // Ensure context
-            if (windowSurface != null) {
-                windowSurface!!.makeCurrent()
-            } else if (encoderSurface != null) {
-                encoderSurface!!.makeCurrent()
-            } else {
-                offscreenSurface.makeCurrent()
-            }
-
-            // Update Camera Texture
-            try {
-                surfaceTexture?.updateTexImage()
-                surfaceTexture?.getTransformMatrix(mSTMatrix)
-            } catch (e: Exception) {
-                // Ignore
-            }
-
-            // --- PIPELINE EXECUTION ---
-            
-            // 1. Render Camera OES -> FBO A (Convert to 2D Texture)
-            fboA!!.bind()
-            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-            fullFrameBlit?.draw(
-                mIdentityMatrix,
-                mSTMatrix,
-                textureId,
-                fullRectangleBuf,
-                0,
-                4,
-                2,
-                8,
-                fullRectangleTexBuf,
-                8
-            )
-            fboA!!.unbind()
-            
-            var currentInputTexId = fboA!!.textureId
-            var currentOutputFbo = fboB
-            
-            // 2. Run Plugins (Ping-Pong)
-            for (plugin in plugins) {
-                currentOutputFbo!!.bind()
-                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
-                
                 plugin.process(currentInputTexId, currentOutputFbo!!.textureId, surfaceTexture!!.timestamp)
                 
                 currentOutputFbo!!.unbind()
