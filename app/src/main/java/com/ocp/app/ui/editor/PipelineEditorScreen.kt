@@ -28,36 +28,55 @@ fun PipelineEditorScreen(
         PluginUiModel("LUT Color Grade", "Applies cinematic color grading")
     )) }
 
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("List", "Graph")
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Pipeline Editor") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            Column {
+                TopAppBar(
+                    title = { Text("Pipeline Editor") },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { /* TODO: Add Plugin Dialog */ }) {
+                            Icon(Icons.Default.Add, contentDescription = "Add Plugin")
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Add Plugin Dialog */ }) {
-                        Icon(Icons.Default.Add, contentDescription = "Add Plugin")
+                )
+                TabRow(selectedTabIndex = selectedTab) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab == index,
+                            onClick = { selectedTab = index },
+                            text = { Text(title) }
+                        )
                     }
                 }
-            )
+            }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Text("Active Chain", style = MaterialTheme.typography.titleMedium)
-            }
-            
-            items(plugins) { plugin ->
-                PluginCard(plugin)
+        Box(modifier = Modifier.padding(paddingValues)) {
+            if (selectedTab == 0) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    item {
+                        Text("Active Chain", style = MaterialTheme.typography.titleMedium)
+                    }
+                    
+                    items(plugins) { plugin ->
+                        PluginCard(plugin)
+                    }
+                }
+            } else {
+                NodeGraphEditor()
             }
         }
     }
@@ -65,6 +84,8 @@ fun PipelineEditorScreen(
 
 @Composable
 fun PluginCard(plugin: PluginUiModel) {
+    var intensity by remember { mutableStateOf(0.5f) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -72,6 +93,13 @@ fun PluginCard(plugin: PluginUiModel) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = plugin.name, style = MaterialTheme.typography.titleMedium)
             Text(text = plugin.description, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Intensity: ${String.format("%.2f", intensity)}")
+            Slider(
+                value = intensity,
+                onValueChange = { intensity = it },
+                valueRange = 0f..1f
+            )
         }
     }
 }
