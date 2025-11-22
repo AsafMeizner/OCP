@@ -54,10 +54,12 @@ class BrightnessContrastPlugin : ShaderPlugin(
     override fun init(params: Map<String, Any>) {
         super.init(params)
         if (params.containsKey("brightness")) {
-            brightness = (params["brightness"] as Number).toFloat()
+            val p = params["brightness"]
+            brightness = (p as? Number)?.toFloat() ?: (p as? String)?.toFloatOrNull() ?: 0.0f
         }
         if (params.containsKey("contrast")) {
-            contrast = (params["contrast"] as Number).toFloat()
+            val p = params["contrast"]
+            contrast = (p as? Number)?.toFloat() ?: (p as? String)?.toFloatOrNull() ?: 1.0f
         }
 
         programHandle = createProgram(VERTEX_SHADER, FRAGMENT_SHADER)

@@ -48,7 +48,8 @@ class LutPlugin : ShaderPlugin(
     override fun init(params: Map<String, Any>) {
         super.init(params)
         if (params.containsKey("intensity")) {
-            intensity = (params["intensity"] as Number).toFloat()
+            val p = params["intensity"]
+            intensity = (p as? Number)?.toFloat() ?: (p as? String)?.toFloatOrNull() ?: 1.0f
         }
         if (params.containsKey("lutBitmap")) {
             lutBitmap = params["lutBitmap"] as? Bitmap

@@ -63,10 +63,12 @@ class CaptureController(context: Context) {
 
     fun setPipeline(pipeline: com.ocp.shared.PipelineDefinition) {
         val plugins = pluginLoader.instantiatePipeline(pipeline)
-        pipelineEngine.setPlugins(plugins)
         
-        // Audio Plugins
+        // Separate Video and Audio plugins
         val audioPlugins = plugins.filterIsInstance<AudioPlugin>()
+        val videoPlugins = plugins.filter { it !is AudioPlugin }
+        
+        pipelineEngine.setPlugins(videoPlugins)
         audioEngine.setPlugins(audioPlugins)
     }
 
