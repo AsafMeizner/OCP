@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.ocp.app.data.SessionManager.init(applicationContext)
         captureController = CaptureController(this)
 
                                 onOpenMarketplace = {

@@ -85,7 +85,8 @@ class VideoEncoder(
     private var audioThread: Thread? = null
     private val audioBufferInfo = MediaCodec.BufferInfo()
     private var audioTrackIndex = -1
-    private var isRecording = false // Assuming this was missing and needed for the new code
+    @Volatile
+    private var isRecording = false
     private val bufferInfo = MediaCodec.BufferInfo() // Assuming this was missing and needed for drainEncoder
 
     fun start(): Surface {
